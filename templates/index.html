@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAIT - Discover Tourism</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        nav button {
+            margin: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .section {
+            display: none;
+            padding: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input, select, textarea {
+            margin-bottom: 10px;
+            margin-right: 10px;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Welcome to WAIT</h1>
+            <nav>
+                <button onclick="showSection('propose')">Propose a Place</button>
+                <button onclick="showSection('vote1')">Vote for a Place</button>
+                <button onclick="showSection('viewVoted')">View Voted Places</button>
+                <button onclick="showSection('filter')">Filter Places</button>
+            </nav>
+        </header>
+        <main>
+            <section id="propose" class="section">
+            <!-- <section id="propose" class="section active"> -->
+                <h2>Propose a New Place</h2>
+                <form id="proposeForm">
+                    <input type="text" id="userId" placeholder="Your User ID" required>
+                    <input type="text" id="placeName" placeholder="Place Name" required>
+                    <input type="text" id="country" placeholder="Country" required>
+                    <select id="region">
+                        <option value="">Select Region</option>
+                        <option value="Asia">Asia</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Africa">Africa</option>
+                        <option value="North America">North America</option>
+                        <option value="South America">South America</option>
+                        <option value="Oceania">Oceania</option>
+                    </select>
+                    <button type="submit">Submit</button>
+                </form>
+                <div id="proposeFeedback" class="feedback"></div>
+            </section>
+            <section id="vote1" class="section">
+                <h2>Places You Can Vote For</h2>
+                <input type="text" id="voteUserId" placeholder="Your User ID" required>
+                <button onclick="fetchPlaces()">Enter</button>
+                <div id="output"></div>
+                <ul id="votedList1"></ul>
+                
+                <h2>Vote Here</h2>
+                <form id="voteForm">
+                    <input type="text" id="votePlaceName" placeholder="Place Name" required>
+                    <textarea id="comment" placeholder="Your Comment"></textarea>
+                    <button type="submit">Vote</button>
+                </form>
+                <div id="voteFeedback" class="feedback"></div>
+            </section>
+            <section id="viewVoted" class="section">
+                <h2>Your Voted Places</h2>
+                <button onclick="fetchVotedPlaces()">Refresh List</button>
+                <ul id="votedList"></ul>
+                <div id="viewFeedback" class="feedback"></div>
+            </section>
+            <section id="filter" class="section">
+                <h2>Filter Places</h2>
+                <input type="text" id="filterCountry" placeholder="Enter Country">
+                <select id="filterRegion">
+                    <option value="">Select Region</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Africa">Africa</option>
+                    <option value="North America">North America</option>
+                    <option value="South America">South America</option>
+                    <option value="Oceania">Australia</option>
+                </select>
+                <button onclick="filterPlaces()">Filter</button>
+                <ul id="filteredList"></ul>
+            </section>
+        </main>
+    </div>
+    <script>
+        // JavaScript for SPA functionality and API interactions
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            if(sectionId==='vote1'){
+                document.getElementById("output").innerHTML = '';
+                document.getElementById("votedList1").innerHTML = '';
+                document.getElementById("voteFeedback").innerHTML = '';
+                document.getElementById('voteUserId').value = '';
+                document.getElementById('votePlaceName').value = '';
+                document.getElementById('comment').value = '';
+
+            }
+            else if (sectionId==='propose') {
+                document.getElementById('proposeFeedback').innerHTML='';
+                document.getElementById('userId').value = '';
+                document.getElementById('placeName').value = '';
+                document.getElementById('country').value = '';
+                document.getElementById('region').value = '';
+            } 
+            else if(sectionId==='viewVoted'){
+                document.getElementById('votedList1').innerHTML='';
+                document.getElementById("viewFeedback").innerHTML = '';
+            }
+            else {
+                document.getElementById('filteredList').innerHTML='';
+                document.getElementById('filterCountry').value = '';
+                document.getElementById('filterRegion').value = '';
+
+            }
+        }
+
+        // Handle propose form submission
+        document.getElementById('proposeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const placeName = document.getElementById('placeName').value;
+            const country = document.getElementById('country').value;
+            const region = document.getElementById('region').value;
+            const feedbackElement = document.getElementById('proposeFeedback');
+            
+
+            // AJAX call to propose a place
+            fetch('/propose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId, place_name: placeName, country: country, region: region }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                feedbackElement.textContent = data.message;
+                feedbackElement.classList.remove('error');
+                // Clear form fields after successful submission
+                document.getElementById('userId').value = '';
+                document.getElementById('placeName').value = '';
+                document.getElementById('country').value = '';
+                document.getElementById('region').value = '';             
+            })
+            .catch(error => {
+                feedbackElement.textContent = 'Failed to propose a place.';
+                feedbackElement.classList.add('error');
+            });
+           
+        });
+    
+
+        // Handle vote form submission
+    document.getElementById('voteForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        //console.log("Can log userIdForVote?"+userIdForVote+"Yep/nope");
+        //const userId = userIdForVote; 
+        const userId = document.getElementById('voteUserId').value;
+        const placeName = document.getElementById('votePlaceName').value;
+        const comment = document.getElementById('comment').value;
+        const feedbackElement = document.getElementById('voteFeedback');
+
+        fetch('/vote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId, place_name: placeName, comment: comment }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            //console.log("Vote recorded!")
+            feedbackElement.textContent = data.message;
+            feedbackElement.classList.remove('error');
+            // Clear form fields after successful submission
+             document.getElementById('userId').value = '';
+
+            // Clear form fields after successful submission
+            document.getElementById('votePlaceName').value = '';
+            document.getElementById('comment').value = '';
+        })
+        .catch(error => {
+            feedbackElement.textContent = 'Failed to vote for the place. Error: ' + error;
+            feedbackElement.classList.add('error');
+            
+        });
+    });
+
+    function fetchVotedPlaces() {
+    const userId = prompt("Enter your User ID to view voted places:");
+    const votedListElement = document.getElementById('votedList');
+    votedListElement.innerHTML = ''; // Clear the list before appending new items
+    const feedbackElement = document.getElementById('viewFeedback');
+    feedbackElement.textContent = ''; // Clear previous feedback
+
+    
+
+    fetch('/view-voted?user_id=' + userId)
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('User not found. This may be because you have not voted for any places.');
+            } else {
+                throw new Error('User ID was not entered. Hence, data cannot be fetched.');
+            }
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message) {
+            feedbackElement.textContent = data.message;
+        } else if (data.length === 0) {
+            feedbackElement.textContent = 'You have not voted for any places.';
+        } else {
+            data.forEach(place => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${place.place_name} in ${place.country}, ${place.region}, Comments : ${place.comments}` ;
+                votedListElement.appendChild(listItem);
+            });
+        }
+       
+    })
+    .catch(error => {
+        feedbackElement.textContent = error.message;
+        feedbackElement.classList.add('error');
+        
+    });
+}
+
+    var userIdForVote;
+
+    // Fetch non-voted places
+    function fetchPlaces() {
+        const userId = document.getElementById('voteUserId').value;
+        userIdForVote = userId;
+        const votedListElement = document.getElementById('votedList1');
+        votedListElement.innerHTML = ''; // Clear the list before appending new items
+
+        // console.log('/view-except-voted?user_id=' + userId);
+        if (!userId) {
+        alert("User ID is required.");
+        return; // Stop the function if no user ID is provided.
+    }
+
+        fetch('/view-except-voted?user_id=' + userId)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('output').textContent = 'User ID: ' + userId;
+            data.forEach(place => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${place.place_name} in ${place.country}, ${place.region} (Votes: ${place.vote_count})`;
+                votedListElement.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Failed to fetch voted places:', error);
+        });
+    }
+
+    // Filter places based on region
+    function filterPlaces() {
+        const country = document.getElementById('filterCountry').value.trim();
+        const region = document.getElementById('filterRegion').value;
+        const filteredListElement = document.getElementById('filteredList');
+        filteredListElement.innerHTML = ''; // Clear the list before appending new items
+
+        fetch(`/filter?region=${region}&country=${country}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Clearing elements");
+            document.getElementById('filterCountry').value='';
+            document.getElementById('filterRegion').value='';
+            if (data.length === 0) { // Check if no places found
+                const listItem = document.createElement('li');
+                listItem.textContent = 'No places found for the selected country or region.';
+                filteredListElement.appendChild(listItem);
+            } else {
+                data.forEach(place => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${place.place_name} in ${place.country}, ${place.region} (Votes: ${place.vote_count})`;
+                    if (place.comments && place.comments.length > 0) {
+                        const commentsList = document.createElement('ul');
+                        place.comments.forEach(comment => {
+                            if (comment.trim() !== '') { // Check if comment is not empty or only whitespace
+                                const commentItem = document.createElement('li');
+                                commentItem.textContent = comment;
+                                commentsList.appendChild(commentItem);
+                            }
+                        });
+                        listItem.appendChild(commentsList);
+                    }
+                    filteredListElement.appendChild(listItem);
+                });
+            }
+            
+        })
+        .catch(error => {
+            console.error('Failed to filter places:', error);
+        });
+        
+    }
+</script>
+    
+</body>
+</html>
