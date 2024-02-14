@@ -1,0 +1,8 @@
+{"user_id": "1", "place_name": "Mumbai", "country": "India", "region": "Asia", "type": "propose"}
+{"user_id": "2", "place_name": "Paris", "country": "France", "region": "Europe", "type": "propose"}
+{"user_id": "3", "place_name": "London", "country": "UK", "region": "Europe", "type": "propose"}
+{"user_id": "2", "place_name": "Mumbai", "comment": "lovely beaches!", "type": "vote"}
+{"user_id": "1", "place_name": "Paris", "comment": "Eiffel Tower looks beautiful in the night", "type": "vote"}
+{"user_id": "2", "place_name": "New York", "country": "USA", "region": "North America", "type": "propose"}
+{"user_id": "3", "place_name": "Mumbai", "comment": "Great Food!", "type": "vote"}
+{"user_id": "2", "place_name": "Cairo", "country": "Eygpt", "region": "Africa", "type": "propose"}
